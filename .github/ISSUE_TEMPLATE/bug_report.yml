@@ -1,5 +1,5 @@
 name: Bug Report
-description: Create a report to help us improve PixelPlayer for Wear OS
+description: Create a report to help us improve PixelPlayer
 title: "[Bug]: "
 labels: ["bug"]
 body:
@@ -31,10 +31,10 @@ body:
     id: environment
     attributes:
       label: Device Environment
-      description: What is your watch model and Wear OS version?
+      description: What is your device model and OS version?
       placeholder: |
-        Model: (e.g. Galaxy Watch 4, Pixel Watch)
-        OS Version: (e.g. 14, 15, 16, 17 for Android)
+        Model: (e.g. Pixel 8, Galaxy Watch 4)
+        OS Version: (e.g. Android 14, Wear OS 4)
     validations:
       required: true
   - type: textarea
