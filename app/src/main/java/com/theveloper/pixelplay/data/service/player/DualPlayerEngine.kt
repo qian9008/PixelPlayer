@@ -63,6 +63,18 @@ data class ActiveDecoderInfo(
     val isHardware: Boolean
 )
 
+internal fun shouldResumeAfterTransientAudioFocusLoss(
+    masterPlayWhenReady: Boolean,
+    masterIsPlaying: Boolean,
+    transitionRunning: Boolean,
+    auxiliaryPlayWhenReady: Boolean,
+    auxiliaryIsPlaying: Boolean
+): Boolean {
+    return masterPlayWhenReady ||
+        masterIsPlaying ||
+        (transitionRunning && (auxiliaryPlayWhenReady || auxiliaryIsPlaying))
+}
+
 /**
  * Manages two ExoPlayer instances (A and B) to enable seamless transitions.
  *
@@ -158,7 +170,13 @@ class DualPlayerEngine @Inject constructor(
             }
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
                 Timber.tag("TransitionDebug").d("AudioFocus LOSS_TRANSIENT. Pausing.")
-                isFocusLossPause = true
+                isFocusLossPause = shouldResumeAfterTransientAudioFocusLoss(
+                    masterPlayWhenReady = playerA.playWhenReady,
+                    masterIsPlaying = playerA.isPlaying,
+                    transitionRunning = transitionRunning,
+                    auxiliaryPlayWhenReady = playerB.playWhenReady,
+                    auxiliaryIsPlaying = playerB.isPlaying
+                )
                 playerA.playWhenReady = false
                 playerB.playWhenReady = false
             }

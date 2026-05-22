@@ -47,6 +47,7 @@ import androidx.compose.ui.semantics.setProgress
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
+import androidx.compose.ui.unit.times
 import kotlinx.coroutines.isActive
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -213,37 +214,23 @@ fun WavySliderExpressive(
             },
         contentAlignment = Alignment.Center
     ) {
-        if (isPlaying) {
-            LinearWavyProgressIndicator(
-                progress = { renderedNormalizedProgress.floatValue },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = trackEdgePadding.coerceAtLeast(0.dp))
-                    // Decorative layer: avoid duplicate semantics updates from the visual track.
-                    .clearAndSetSemantics { },
-                color = activeTrackColor,
-                trackColor = inactiveTrackColor,
-                stroke = stroke,
-                trackStroke = stroke,
-                gapSize = dynamicGapSize.value,
-                stopSize = 3.dp,
-                amplitude = { progress -> if (progress > 0f) animatedAmplitude else 0f },
-                wavelength = wavelength,
-                waveSpeed = waveSpeed
-            )
-        } else {
-            FlatTrackExpressive(
-                progress = { renderedNormalizedProgress.floatValue },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = trackEdgePadding.coerceAtLeast(0.dp))
-                    .clearAndSetSemantics { },
-                color = activeTrackColor,
-                trackColor = inactiveTrackColor,
-                strokeWidthPx = strokeWidthPx,
-                gapSize = { dynamicGapSize.value }
-            )
-        }
+        LinearWavyProgressIndicator(
+            progress = { renderedNormalizedProgress.floatValue },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = trackEdgePadding.coerceAtLeast(0.dp))
+                // Decorative layer: avoid duplicate semantics updates from the visual track.
+                .clearAndSetSemantics { },
+            color = activeTrackColor,
+            trackColor = inactiveTrackColor,
+            stroke = stroke,
+            trackStroke = stroke,
+            gapSize = dynamicGapSize.value * (1.0f + 0.1573f * animatedAmplitude * animatedAmplitude),
+            stopSize = 3.dp,
+            amplitude = { progress -> if (progress > 0f) animatedAmplitude else 0f },
+            wavelength = wavelength,
+            waveSpeed = waveSpeed
+        )
 
         Canvas(modifier = Modifier.fillMaxSize()) {
             val edgePaddingPx = trackEdgePaddingPx.coerceIn(0f, size.width / 2f)
@@ -327,55 +314,5 @@ fun WavySliderExpressive(
                     }
                 }
         )
-    }
-}
-
-@Composable
-private fun FlatTrackExpressive(
-    progress: () -> Float,
-    modifier: Modifier = Modifier,
-    color: Color,
-    trackColor: Color,
-    strokeWidthPx: Float,
-    gapSize: () -> Dp
-) {
-    val density = LocalDensity.current
-    
-    Canvas(modifier = modifier) {
-        val gapSizePx = with(density) { gapSize().toPx() }
-        val width = size.width
-        val height = size.height
-        val y = height / 2f
-        val currentProgress = progress()
-        
-        val halfStroke = strokeWidthPx / 2f
-        val trackStart = halfStroke
-        val trackEnd = width - halfStroke
-        val trackWidth = (trackEnd - trackStart).coerceAtLeast(0f)
-        val thumbX = trackStart + (trackWidth * currentProgress)
-        
-        // Active track
-        val activeEnd = (thumbX - gapSizePx).coerceIn(trackStart, trackEnd)
-        if (activeEnd > trackStart) {
-            drawLine(
-                color = color,
-                start = Offset(trackStart, y),
-                end = Offset(activeEnd, y),
-                strokeWidth = strokeWidthPx,
-                cap = StrokeCap.Round
-            )
-        }
-        
-        // Inactive track
-        val inactiveStart = (thumbX + gapSizePx).coerceIn(trackStart, trackEnd)
-        if (inactiveStart < trackEnd) {
-            drawLine(
-                color = trackColor,
-                start = Offset(inactiveStart, y),
-                end = Offset(trackEnd, y),
-                strokeWidth = strokeWidthPx,
-                cap = StrokeCap.Round
-            )
-        }
     }
 }
