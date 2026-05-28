@@ -4362,6 +4362,14 @@ class PlayerViewModel @Inject constructor(
         return remoteCurrentSongId == null || remoteCurrentSongId == expectedSongId
     }
 
+    /**
+     * Signal from the player sheet whether the slider-bearing UI is currently
+     * rendered. Drives the position-ticker's resolution (250 ms vs 1 s).
+     */
+    fun setSliderUiMounted(mounted: Boolean) {
+        playbackStateHolder.setSliderUiMounted(mounted)
+    }
+
     fun playPause() {
         val castSession = castStateHolder.castSession.value
         if (castSession != null && castSession.remoteMediaClient != null) {

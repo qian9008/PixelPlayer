@@ -198,7 +198,7 @@ class DualPlayerEngine @Inject constructor(
     }
 
     // Listener to attach to the active master player (playerA)
-    private val masterPlayerListener = object : Player.Listener, AnalyticsListener {
+    private val masterPlayerListener = object : Player.Listener, AnalyticsListener, ExoPlayer.AudioOffloadListener {
         override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
             if (playWhenReady) {
                 lastPlayWhenReadyAtMs = SystemClock.elapsedRealtime()
@@ -216,6 +216,46 @@ class DualPlayerEngine @Inject constructor(
             if (isPlaying) {
                 lastPlayingAtMs = SystemClock.elapsedRealtime()
                 cancelAudioOffloadFallback()
+            }
+        }
+
+        /**
+         * Fires when ExoPlayer believes the audio HAL is producing output via
+         * offload and the renderer thread can stop polling — at that point the
+         * CPU genuinely doesn't need a wake lock to keep playing audio. When
+         * [sleepingForOffload] flips back to false (track change, format
+         * mismatch, fallback path), restore [C.WAKE_MODE_LOCAL] so the
+         * non-offload PCM path keeps the CPU awake correctly.
+         *
+         * Battery: this is what actually lets the SoC race-to-sleep during
+         * music playback. The static [C.WAKE_MODE_LOCAL] we set at build time
+         * is the safe default; this callback is the dynamic optimisation.
+         */
+        @Suppress("UnsafeOptInUsageError")
+        override fun onSleepingForOffloadChanged(sleepingForOffload: Boolean) {
+            if (!::playerA.isInitialized) return
+            // Only override the wake mode for local media. Remote schemes need
+            // C.WAKE_MODE_NETWORK to keep the wifi lock; we never want to drop
+            // that to NONE.
+            val baseMode = wakeModeFor(playerA.currentMediaItem)
+            val desiredMode = if (sleepingForOffload && baseMode == C.WAKE_MODE_LOCAL) {
+                C.WAKE_MODE_NONE
+            } else {
+                baseMode
+            }
+            if (currentWakeMode == desiredMode) return
+
+            try {
+                playerA.setWakeMode(desiredMode)
+                playerB?.setWakeMode(desiredMode)
+                currentWakeMode = desiredMode
+                Timber.tag("DualPlayerEngine").d(
+                    "Wake mode -> %d (sleepingForOffload=%b)",
+                    desiredMode,
+                    sleepingForOffload
+                )
+            } catch (e: Exception) {
+                Timber.tag("DualPlayerEngine").w(e, "Failed to apply offload-aware wake mode")
             }
         }
 
@@ -339,6 +379,18 @@ class DualPlayerEngine @Inject constructor(
         }
     }
 
+    private fun addMasterPlayerListeners(player: ExoPlayer) {
+        player.addListener(masterPlayerListener)
+        player.addAnalyticsListener(masterPlayerListener)
+        player.addAudioOffloadListener(masterPlayerListener)
+    }
+
+    private fun removeMasterPlayerListeners(player: ExoPlayer) {
+        player.removeListener(masterPlayerListener)
+        player.removeAnalyticsListener(masterPlayerListener)
+        player.removeAudioOffloadListener(masterPlayerListener)
+    }
+
     fun addPlayerSwapListener(listener: (Player) -> Unit) {
         onPlayerSwappedListeners.add(listener)
     }
@@ -397,6 +449,7 @@ class DualPlayerEngine @Inject constructor(
         }
 
         if (::playerA.isInitialized) {
+            removeMasterPlayerListeners(playerA)
             onPlayerAboutToBeReleasedListener?.invoke(playerA)
             try { playerA.release() } catch (e: Exception) { /* Ignore */ }
         }
@@ -405,8 +458,7 @@ class DualPlayerEngine @Inject constructor(
 
         playerA = buildPlayer()
 
-        playerA.addListener(masterPlayerListener)
-        playerA.addAnalyticsListener(masterPlayerListener)
+        addMasterPlayerListeners(playerA)
 
         _activeAudioSessionId.value = playerA.audioSessionId
         isReleased = false
@@ -560,8 +612,7 @@ class DualPlayerEngine @Inject constructor(
         val pauseAtEnd = playerA.pauseAtEndOfMediaItems
         val playbackParameters: PlaybackParameters = playerA.playbackParameters
 
-        playerA.removeListener(masterPlayerListener)
-        playerA.removeAnalyticsListener(masterPlayerListener)
+        removeMasterPlayerListeners(playerA)
         onPlayerAboutToBeReleasedListener?.invoke(playerA)
         playerA.release()
         playerB?.release()
@@ -569,8 +620,7 @@ class DualPlayerEngine @Inject constructor(
 
         playerA = buildPlayer()
 
-        playerA.addListener(masterPlayerListener)
-        playerA.addAnalyticsListener(masterPlayerListener)
+        addMasterPlayerListeners(playerA)
         playerA.volume = volume
         playerA.pauseAtEndOfMediaItems = pauseAtEnd
         playerA.playbackParameters = playbackParameters
@@ -984,8 +1034,7 @@ class DualPlayerEngine @Inject constructor(
         incomingPlayer.volume = incomingTrackReplayGainVolume ?: 1f
         incomingTrackReplayGainVolume = null
 
-        outgoingPlayer.removeListener(masterPlayerListener)
-        outgoingPlayer.removeAnalyticsListener(masterPlayerListener)
+        removeMasterPlayerListeners(outgoingPlayer)
 
         playerA = incomingPlayer
         playerB = outgoingPlayer
@@ -995,8 +1044,7 @@ class DualPlayerEngine @Inject constructor(
 
         playerA.pauseAtEndOfMediaItems = false
         playerB?.pauseAtEndOfMediaItems = false
-        playerA.addListener(masterPlayerListener)
-        playerA.addAnalyticsListener(masterPlayerListener)
+        addMasterPlayerListeners(playerA)
         if (playerA.playWhenReady) requestAudioFocus()
 
         onPlayerSwappedListeners.forEach { it(playerA) }
@@ -1133,8 +1181,7 @@ class DualPlayerEngine @Inject constructor(
         scope.coroutineContext[Job]?.cancel()
         abandonAudioFocus()
         if (::playerA.isInitialized) {
-            playerA.removeListener(masterPlayerListener)
-            playerA.removeAnalyticsListener(masterPlayerListener)
+            removeMasterPlayerListeners(playerA)
             onPlayerAboutToBeReleasedListener?.invoke(playerA)
             playerA.release()
         }

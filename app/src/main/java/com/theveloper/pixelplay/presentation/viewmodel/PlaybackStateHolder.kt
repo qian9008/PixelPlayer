@@ -51,13 +51,17 @@ class PlaybackStateHolder @Inject constructor(
         // assume the seek will not land and fall back to the reported position rather than
         // pinning the UI on a stale value forever.
         private const val PAUSED_OVERRIDE_MAX_AGE_MS = 4_000L
-        // 250 ms keeps the slider/time display visibly smooth. We tried 500 ms to lower
-        // Compose recomposition pressure, but the smooth-progress sampler does not actually
-        // interpolate between source samples — it polls — so a 500 ms source cadence made the
-        // slider stutter in half-second jumps. Background tick is throttled to 1 s since the
-        // screen is off and no slider is visible.
-        private const val FOREGROUND_PROGRESS_TICK_MS = 250L
-        private const val BACKGROUND_PROGRESS_TICK_MS = 1000L
+        // Tick rates:
+        //  - SLIDER_TICK_MS (250): keeps the player sheet's slider/time display visibly smooth.
+        //    We tried 500 ms once to lower Compose recomposition pressure, but the smooth-progress
+        //    sampler polls instead of interpolating, so a 500 ms source made the slider stutter
+        //    in half-second jumps. Used only when the player sheet is open (slider visible).
+        //  - MINIPLAYER_TICK_MS (1000): mini-player + lock screen / notification only need
+        //    second-level precision. Drops position-polling-driven CPU wakes 4x → 1x per second.
+        //  - BACKGROUND_TICK_MS (1000): screen off, no slider visible.
+        private const val SLIDER_TICK_MS = 250L
+        private const val MINIPLAYER_TICK_MS = 1000L
+        private const val BACKGROUND_TICK_MS = 1000L
         /**
          * Threshold above which we skip per-item moveMediaItem calls and use
          * a single setMediaItems call instead. moveMediaItem triggers an IPC
@@ -81,6 +85,14 @@ class PlaybackStateHolder @Inject constructor(
     val stablePlayerState: StateFlow<StablePlayerState> = _stablePlayerState.asStateFlow()
     private val _currentPosition = MutableStateFlow(0L)
     val currentPosition: StateFlow<Long> = _currentPosition.asStateFlow()
+
+    // True while the full player sheet (slider visible) is mounted. Set by the
+    // sheet via DisposableEffect. Controls whether the position ticker runs at
+    // slider-smooth resolution (250 ms) or mini-player resolution (1 s).
+    private val _sliderUiMounted = MutableStateFlow(false)
+    fun setSliderUiMounted(mounted: Boolean) {
+        _sliderUiMounted.value = mounted
+    }
 
     // Internal State
     private var isSeeking = false
@@ -729,11 +741,10 @@ class PlaybackStateHolder @Inject constructor(
     }
 
     private fun currentProgressTickMs(): Long {
-        return if (powerManager.isInteractive) {
-            FOREGROUND_PROGRESS_TICK_MS
-        } else {
-            BACKGROUND_PROGRESS_TICK_MS
-        }
+        if (!powerManager.isInteractive) return BACKGROUND_TICK_MS
+        // Interactive but the slider isn't mounted (mini-player / lock-screen
+        // notification only) — second-level precision is enough.
+        return if (_sliderUiMounted.value) SLIDER_TICK_MS else MINIPLAYER_TICK_MS
     }
 
     fun stopProgressUpdates() {
