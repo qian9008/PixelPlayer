@@ -45,6 +45,7 @@ import androidx.compose.material3.MediumExtendedFloatingActionButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -75,6 +76,26 @@ fun BetaInfoBottomSheet(modifier: Modifier = Modifier) {
 
     val fabCornerRadius = 18.dp
 
+    val versionName = remember {
+        try {
+            val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            packageInfo.versionName ?: "0.7.5-beta"
+        } catch (_: Exception) {
+            "0.7.5-beta"
+        }
+    }
+
+    val displayVersion = remember(versionName) {
+        val original = context.getString(R.string.presentation_batch_g_beta_sheet_version)
+        val cleanVersion = versionName.substringBefore("-")
+        original.replace(Regex("""\d+\.\d+\.\d+"""), cleanVersion)
+    }
+
+    val welcomeTitle = remember(versionName) {
+        val original = context.getString(R.string.presentation_batch_g_beta_sheet_welcome_title)
+        original.replace(Regex("""\d+\.\d+\.\d+(?:-beta)?"""), versionName)
+    }
+
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -89,7 +110,7 @@ fun BetaInfoBottomSheet(modifier: Modifier = Modifier) {
             item(key = "header") {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = stringResource(R.string.presentation_batch_g_beta_sheet_version),
+                        text = displayVersion,
                         fontFamily = GoogleSansRounded,
                         style = ExpTitleTypography.displaySmall,
                         color = MaterialTheme.colorScheme.onSurface
@@ -158,7 +179,7 @@ fun BetaInfoBottomSheet(modifier: Modifier = Modifier) {
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             Text(
-                                text = stringResource(R.string.presentation_batch_g_beta_sheet_welcome_title),
+                                text = welcomeTitle,
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
