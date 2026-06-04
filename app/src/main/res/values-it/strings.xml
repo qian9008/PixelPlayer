@@ -22,14 +22,14 @@
     <string name="lrclib_uri">https://lrclib.net/</string>
     <string name="lyrics_not_found">Testi non trovati</string>
     <string name="search_lyrics_online_prompt">Vuoi cercare i testi online?</string>
-    <string name="lyrics_custom_search_hint">Non siamo riusciti a trovare i testi automaticamente. Puoi modificare il titolo o l'artista e provare a cercare manualmente.</string>
+    <string name="lyrics_custom_search_hint">Non siamo riusciti a trovare i testi automaticamente. Puoi modificare il titolo o l\'artista e provare a cercare manualmente.</string>
     <string name="failed_to_search_for_lyrics">Ricerca testi fallita</string>
     <string name="failed_to_fetch_lyrics_from_remote">Recupero testi da remoto fallito</string>
     <string name="lyrics_fetch_timeout">Timeout di connessione. Verifica la tua connessione Internet.</string>
     <string name="lyrics_network_error">Errore di rete. Verifica la tua connessione Internet.</string>
     <string name="lyrics_server_error">Errore server (codice %d). Riprova più tardi.</string>
     <string name="found_n_matches_format">%d corrispondenza(e) trovata(e)</string>
-    <string name="searched_for_x_format">Ricerca di "%s"</string>
+    <string name="searched_for_x_format">Ricerca di \"%s\"</string>
     <string name="searching_lyrics">Ricerca testi…</string>
     <string name="lyrics_already_available">Testi già disponibili. Recupero online saltato.</string>
     <string name="lyrics_embedded_already_available">Testi incorporati già trovati. Recupero online saltato.</string>
@@ -85,12 +85,12 @@
 
     <string name="ai_error_api_key">Configura una chiave API valida per il provider IA selezionato nelle Impostazioni.</string>
     <string name="ai_error_generic">Errore IA: %s</string>
-    <string name="ai_error_quota">Il provider IA selezionato ha rifiutato la richiesta perché l'account non ha crediti o ha superato la quota.</string>
+    <string name="ai_error_quota">Il provider IA selezionato ha rifiutato la richiesta perché l\'account non ha crediti o ha superato la quota.</string>
     <string name="ai_error_model_unavailable">Il modello IA selezionato non è più disponibile. PixelPlayer ha provato a passare automaticamente a un modello supportato.</string>
-    <string name="ai_no_songs_found">L'IA non ha trovato brani per la tua richiesta.</string>
-    <string name="ai_prompt_empty">Scrivi un'idea per il tuo Daily Mix</string>
+    <string name="ai_no_songs_found">L\'IA non ha trovato brani per la tua richiesta.</string>
+    <string name="ai_prompt_empty">Scrivi un\'idea per il tuo Daily Mix</string>
     <string name="ai_daily_mix_updated">Daily Mix aggiornato con IA</string>
-    <string name="ai_no_songs_for_mix">L'IA non ha trovato brani per questo mix</string>
+    <string name="ai_no_songs_for_mix">L\'IA non ha trovato brani per questo mix</string>
 
     <string name="ai_translate_via_ai">Traduci con IA</string>
     <string name="ai_lyrics_already_translated">Questi testi hanno già una traduzione</string>
@@ -110,13 +110,13 @@
 
     <string name="invalid_album_id">ID album non valido</string>
     <string name="album_id_not_found">ID album non trovato</string>
-    <string name="error_loading_album">Errore durante il caricamento dei dati dell'album: %s</string>
+    <string name="error_loading_album">Errore durante il caricamento dei dati dell\'album: %s</string>
     <string name="album_not_found">Album non trovato</string>
     <string name="could_not_update">Impossibile aggiornare: %s</string>
     <string name="invalid_artist_id">ID artista non valido</string>
     <string name="artist_id_not_found">ID artista non trovato</string>
-    <string name="error_loading_artist">Errore durante il caricamento dei dati dell'artista: %s</string>
-    <string name="could_not_find_artist">Impossibile trovare l'artista</string>
+    <string name="error_loading_artist">Errore durante il caricamento dei dati dell\'artista: %s</string>
+    <string name="could_not_find_artist">Impossibile trovare l\'artista</string>
     <string name="no_valid_songs">Nessun brano valido trovato da riprodurre</string>
 
     <string name="glance_widget_description">Widget reattivo che si adatta alla sua dimensione</string>
@@ -136,12 +136,12 @@
     <string name="error_unknown">Errore sconosciuto</string>
 
     <!-- Watch transfer foreground service -->
-    <string name="watch_transfer_sending_n_to_watch">Invio di %1$d brani all'orologio</string>
-    <string name="watch_transfer_sending_to_watch">Invio all'orologio</string>
+    <string name="watch_transfer_sending_n_to_watch">Invio di %1$d brani all\'orologio</string>
+    <string name="watch_transfer_sending_to_watch">Invio all\'orologio</string>
     <string name="watch_transfer_complete">Trasferimento completato</string>
     <string name="watch_transfer_failed">Trasferimento fallito</string>
     <string name="watch_transfer_cancelled">Trasferimento annullato</string>
-    <string name="watch_transfer_preparing">Preparazione trasferimento all'orologio</string>
+    <string name="watch_transfer_preparing">Preparazione trasferimento all\'orologio</string>
     <string name="watch_transfer_summary_n">%1$d trasferimenti</string>
     <string name="watch_transfer_starting">Avvio trasferimento…</string>
     <string name="watch_transfer_multiple_active">Più trasferimenti attivi</string>
@@ -152,8 +152,8 @@
     <string name="watch_transfer_status_cancelled">Annullato</string>
     <string name="watch_transfer_status_preparing">Preparazione</string>
     <string name="watch_transfer_starting_short">Avvio</string>
-    <string name="watch_transfer_channel_name">Trasferimenti all'orologio</string>
-    <string name="watch_transfer_channel_description">Mostra l'avanzamento in tempo reale dei trasferimenti musicali dal telefono all'orologio</string>
+    <string name="watch_transfer_channel_name">Trasferimenti all\'orologio</string>
+    <string name="watch_transfer_channel_description">Mostra l\'avanzamento in tempo reale dei trasferimenti musicali dal telefono all\'orologio</string>
 
     <!-- Cast HTTP server -->
     <string name="cast_server_channel_name">Server multimediale Cast</string>
@@ -179,7 +179,7 @@
     <string name="dev_test_crash_message">Crash di test attivato dalle Opzioni sviluppatore - questo è intenzionale per testare il sistema di segnalazione crash</string>
 
     <!-- PlayerViewModel -->
-    <string name="player_song_not_found_in_list">Brano non trovato nell'elenco attuale</string>
+    <string name="player_song_not_found_in_list">Brano non trovato nell\'elenco attuale</string>
     <string name="player_could_not_locate_song">Impossibile localizzare il brano</string>
     <string name="player_no_songs_in_library_toast">Nessun brano trovato nella libreria</string>
     <string name="player_playback_stopped_eot">Riproduzione interrotta: %1$s terminata (Fine traccia).</string>
@@ -241,7 +241,7 @@
     <string name="batch_edit_mixed_values">(Valori misti)</string>
     <string name="batch_edit_optional">(Opzionale - lascia vuoto per saltare)</string>
     <string name="batch_edit_success">Aggiornati correttamente %d brani</string>
-    <string name="batch_edit_partial_success">Aggiornati %d di %d brani. Alcuni file non sono stati modificati.</string>
+    <string name="batch_edit_partial_success">Aggiornati %1$d di %2$d brani. Alcuni file non sono stati modificati.</string>
     <string name="batch_edit_failed">Aggiornamento brani fallito</string>
 
     <!-- Batch Edit Cover Art -->
