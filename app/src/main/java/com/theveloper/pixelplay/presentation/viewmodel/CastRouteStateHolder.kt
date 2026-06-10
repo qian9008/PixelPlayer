@@ -22,9 +22,15 @@ class CastRouteStateHolder @Inject constructor(
         onCastUnavailable: (String) -> Unit
     ) {
         val selectedRouteId = castStateHolder.selectedRoute.value?.id
-        val isCastRoute = castStateHolder.run { route.isCastRoute() } && !route.isDefault
         val sessionManager = castStateHolder.sessionManager
-        if (isCastRoute && sessionManager == null) {
+        
+        val castControlCategory = com.google.android.gms.cast.CastMediaControlIntent.categoryForCast(
+            com.google.android.gms.cast.CastMediaControlIntent.DEFAULT_MEDIA_RECEIVER_APPLICATION_ID
+        )
+        val isGoogleCastRoute = route.supportsControlCategory(castControlCategory)
+        val isDlnaRoute = route.supportsControlCategory(androidx.mediarouter.media.MediaControlIntent.CATEGORY_REMOTE_PLAYBACK) && !isGoogleCastRoute
+
+        if (isGoogleCastRoute && sessionManager == null) {
             castStateHolder.setPendingCastRouteId(null)
             castStateHolder.setCastConnecting(false)
             onCastUnavailable("Cast is unavailable right now. Restart the app and try again.")
@@ -32,11 +38,11 @@ class CastRouteStateHolder @Inject constructor(
             return
         }
 
-        val isSwitchingBetweenRemotes = isCastRoute &&
+        val isSwitchingBetweenRemotes = (isGoogleCastRoute || isDlnaRoute) &&
             (castStateHolder.isRemotePlaybackActive.value || castStateHolder.isCastConnecting.value) &&
             selectedRouteId != null &&
             selectedRouteId != route.id
-        val isRetryingFailedSameRoute = isCastRoute &&
+        val isRetryingFailedSameRoute = (isGoogleCastRoute || isDlnaRoute) &&
             selectedRouteId != null &&
             selectedRouteId == route.id &&
             !castStateHolder.isRemotePlaybackActive.value &&
@@ -55,11 +61,20 @@ class CastRouteStateHolder @Inject constructor(
             castStateHolder.setPendingCastRouteId(null)
         }
 
-        if (isCastRoute) {
+        if (isGoogleCastRoute) {
             castTransferStateHolder.primeHttpServerStart()
         }
 
         castStateHolder.selectRoute(route)
+        
+        // DLNA routes connect instantly locally because there is no Google Play Services handshake
+        if (isDlnaRoute) {
+            castStateHolder.setCastConnecting(false)
+            castStateHolder.setRemotePlaybackActive(true)
+            
+            // Notify DLNA transfer state to start playing the current queue
+            // We will implement this next
+        }
     }
 
     fun disconnect(resetConnecting: Boolean = true) {
