@@ -292,8 +292,7 @@ class CastStateHolder @Inject constructor(
     }
 
     init {
-        // Initial setup? No, we wait for refresh or explicit usage?
-        // ViewModel initialized it.
-        // We can attach callback passively? No, battery drain.
+        val dlnaProvider = com.theveloper.pixelplay.dlna.DlnaMediaRouteProvider(context)
+        mediaRouter.addProvider(dlnaProvider)
     }
 }

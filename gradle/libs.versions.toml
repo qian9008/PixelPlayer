@@ -103,6 +103,7 @@ benchmarkMacroJunit4 = "1.4.1"
 baselineprofile = "1.5.0-alpha06"
 profileinstaller = "1.4.1"
 pagingCommon = "3.3.6"
+upnpcast = "0.0.18"
 
 # Wear OS
 horologist = "0.7.15"
@@ -234,6 +235,7 @@ turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine
 truth = { group = "com.google.truth", name = "truth", version.ref = "truth" }
 androidx-room-testing = { module = "androidx.room:room-testing", version.ref = "roomRuntime" }
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlinx-coroutines" }
+upnpcast = { group = "com.github.yinnho", name = "UPnPCast", version.ref = "upnpcast" }
 
 # Wear OS Compose
 wear-compose-material = { module = "androidx.wear.compose:compose-material", version.ref = "wearCompose" }
