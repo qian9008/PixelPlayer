@@ -82,26 +82,29 @@ class DlnaMediaRouteProvider(context: Context) : MediaRouteProvider(context) {
     }
 
     private fun publishRoutes() {
-        val builder = MediaRouteProviderDescriptor.Builder()
+        // MediaRouter enforces strict main thread access for route publication
+        CoroutineScope(Dispatchers.Main).launch {
+            val builder = MediaRouteProviderDescriptor.Builder()
 
-        for (device in discoveredDevices.values) {
-            val controlFilter = android.content.IntentFilter().apply {
-                addCategory(androidx.mediarouter.media.MediaControlIntent.CATEGORY_REMOTE_PLAYBACK)
+            for (device in discoveredDevices.values) {
+                val controlFilter = android.content.IntentFilter().apply {
+                    addCategory(androidx.mediarouter.media.MediaControlIntent.CATEGORY_REMOTE_PLAYBACK)
+                }
+                val routeDescriptor = MediaRouteDescriptor.Builder(device.id, device.name)
+                    .setDescription(device.manufacturer)
+                    .addControlFilter(controlFilter)
+                    .setDeviceType(MediaRouter.RouteInfo.DEVICE_TYPE_TV)
+                    .setPlaybackType(MediaRouter.RouteInfo.PLAYBACK_TYPE_REMOTE)
+                    .setVolumeHandling(MediaRouter.RouteInfo.PLAYBACK_VOLUME_VARIABLE)
+                    .setVolumeMax(100)
+                    .setVolume(50) 
+                    .build()
+                
+                builder.addRoute(routeDescriptor)
             }
-            val routeDescriptor = MediaRouteDescriptor.Builder(device.id, device.name)
-                .setDescription(device.manufacturer)
-                .addControlFilter(controlFilter)
-                .setDeviceType(MediaRouter.RouteInfo.DEVICE_TYPE_TV)
-                .setPlaybackType(MediaRouter.RouteInfo.PLAYBACK_TYPE_REMOTE)
-                .setVolumeHandling(MediaRouter.RouteInfo.PLAYBACK_VOLUME_VARIABLE)
-                .setVolumeMax(100)
-                .setVolume(50) 
-                .build()
-            
-            builder.addRoute(routeDescriptor)
-        }
 
-        descriptor = builder.build()
+            descriptor = builder.build()
+        }
     }
 }
 
