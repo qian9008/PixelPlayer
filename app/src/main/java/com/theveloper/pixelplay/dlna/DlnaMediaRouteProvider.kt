@@ -58,15 +58,51 @@ class DlnaMediaRouteProvider(context: Context) : MediaRouteProvider(context) {
             // Continuously scan every 5 seconds while active
             while (isActive) {
                 try {
-                    // Try to use yinnho/UPnPCast API via reflection to avoid import compilation errors 
-                    // if the package name differs, or fallback to standard logic.
-                    val castClass = Class.forName("com.yinnho.upnpcast.DLNACast")
-                    // Note: If the actual import is different, we can adjust. 
-                    // In a production app, direct import `import com.yinnho.upnpcast.DLNACast` is preferred.
+                    val ssdpRequest = "M-SEARCH * HTTP/1.1\r\n" +
+                        "HOST: 239.255.255.250:1900\r\n" +
+                        "MAN: \"ssdp:discover\"\r\n" +
+                        "MX: 3\r\n" +
+                        "ST: urn:schemas-upnp-org:device:MediaRenderer:1\r\n\r\n"
+
+                    val socket = java.net.DatagramSocket()
+                    socket.soTimeout = 3000
+                    val address = java.net.InetAddress.getByName("239.255.255.250")
+                    val sendData = ssdpRequest.toByteArray()
+                    val packet = java.net.DatagramPacket(sendData, sendData.size, address, 1900)
+                    socket.send(packet)
+
+                    val receiveData = ByteArray(1024)
+                    while (isActive) {
+                        val receivePacket = java.net.DatagramPacket(receiveData, receiveData.size)
+                        try {
+                            socket.receive(receivePacket)
+                            val response = String(receivePacket.data, 0, receivePacket.length)
+                            
+                            var usn = ""
+                            var location = ""
+                            var serverName = "DLNA Render Device"
+                            
+                            response.lines().forEach { line ->
+                                if (line.startsWith("USN:", ignoreCase = true)) usn = line.substringAfter(":").trim()
+                                if (line.startsWith("LOCATION:", ignoreCase = true)) location = line.substringAfter(":").trim()
+                                if (line.startsWith("SERVER:", ignoreCase = true)) {
+                                    val s = line.substringAfter(":").trim()
+                                    if (s.isNotEmpty()) serverName = s
+                                }
+                            }
+                            
+                            if (usn.isNotEmpty() && location.isNotEmpty()) {
+                                // Extracting a cleaner name if possible, or fallback to Server header
+                                val device = DlnaDevice(usn, serverName, location)
+                                discoveredDevices[device.id] = device
+                            }
+                        } catch (e: java.net.SocketTimeoutException) {
+                            break // Scan timeout for this interval
+                        }
+                    }
+                    socket.close()
                 } catch (e: Exception) {
-                    // Fallback to a mock for now until UPnPCast is fully resolved
-                    val mockDevice = DlnaDevice("dlna-mock-${System.currentTimeMillis()}", "Smart TV (DLNA)", "Unknown TV Manufacturer")
-                    discoveredDevices[mockDevice.id] = mockDevice
+                    Timber.e(e, "SSDP Discovery error")
                 }
                 
                 publishRoutes()
