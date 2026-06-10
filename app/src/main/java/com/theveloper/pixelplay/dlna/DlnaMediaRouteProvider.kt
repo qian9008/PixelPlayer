@@ -47,6 +47,13 @@ class DlnaMediaRouteProvider(context: Context) : MediaRouteProvider(context) {
 
     private fun startDiscovery() {
         discoveryJob?.cancel()
+        
+        // Acquire MulticastLock to ensure UDP broadcast packets for SSDP aren't dropped by Android
+        val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as? android.net.wifi.WifiManager
+        val multicastLock = wifiManager?.createMulticastLock("PixelPlayerDLNALock")
+        multicastLock?.setReferenceCounted(true)
+        multicastLock?.acquire()
+
         discoveryJob = providerScope.launch {
             // Continuously scan every 5 seconds while active
             while (isActive) {
@@ -64,6 +71,12 @@ class DlnaMediaRouteProvider(context: Context) : MediaRouteProvider(context) {
                 
                 publishRoutes()
                 delay(5000)
+            }
+        }
+        
+        discoveryJob?.invokeOnCompletion { 
+            if (multicastLock?.isHeld == true) {
+                multicastLock.release()
             }
         }
     }
