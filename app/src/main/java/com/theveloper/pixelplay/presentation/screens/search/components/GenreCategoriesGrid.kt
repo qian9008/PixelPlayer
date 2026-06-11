@@ -1,6 +1,5 @@
 package com.theveloper.pixelplay.presentation.screens.search.components
 
-import androidx.annotation.OptIn
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
