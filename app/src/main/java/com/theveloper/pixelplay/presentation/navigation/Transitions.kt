@@ -1,5 +1,7 @@
 package com.theveloper.pixelplay.presentation.navigation
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -9,6 +11,52 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.ui.graphics.TransformOrigin
+
+// Curva Emphasized oficial de Material 3 (la que usan los Pixel contemporáneos)
+val M3EmphasizedEasing = CubicBezierEasing(0.2f, 0.0f, 0.0f, 1.0f)
+const val AOSP_TRANSITION_DURATION = 350
+
+// Equivale a sud_slide_next_in
+fun aospSharedAxisEnter(): EnterTransition {
+    return slideInHorizontally(
+        initialOffsetX = { it / 3 }, // Arranca desde 1/3 de la pantalla hacia la derecha
+        animationSpec = tween(durationMillis = AOSP_TRANSITION_DURATION, easing = M3EmphasizedEasing)
+    ) + fadeIn(
+        animationSpec = tween(durationMillis = AOSP_TRANSITION_DURATION, easing = M3EmphasizedEasing)
+    )
+}
+
+// Equivale a sud_slide_next_out
+fun aospSharedAxisExit(): ExitTransition {
+    return slideOutHorizontally(
+        targetOffsetX = { -it / 3 }, // Se desplaza 1/3 de la pantalla hacia la izquierda
+        animationSpec = tween(durationMillis = AOSP_TRANSITION_DURATION, easing = M3EmphasizedEasing)
+    ) + scaleOut(
+        targetScale = 0.92f, // Escala hacia abajo para dar efecto de profundidad sin desaparecer por completo
+        animationSpec = tween(durationMillis = AOSP_TRANSITION_DURATION, easing = M3EmphasizedEasing)
+    )
+}
+
+// Equivale a sud_slide_back_in (cuando volvés atrás, la pantalla previa reaparece desde la izquierda)
+fun aospSharedAxisPopEnter(): EnterTransition {
+    return slideInHorizontally(
+        initialOffsetX = { -it / 3 }, // Reaparece desde 1/3 de la izquierda
+        animationSpec = tween(durationMillis = AOSP_TRANSITION_DURATION, easing = M3EmphasizedEasing)
+    ) + fadeIn(
+        animationSpec = tween(durationMillis = AOSP_TRANSITION_DURATION, easing = M3EmphasizedEasing)
+    )
+}
+
+// Equivale a sud_slide_back_out (la pantalla secundaria se destruye deslizándose a la derecha)
+fun aospSharedAxisPopExit(): ExitTransition {
+    return slideOutHorizontally(
+        targetOffsetX = { it / 3 }, // Se destruye deslizándose 1/3 a la derecha
+        animationSpec = tween(durationMillis = AOSP_TRANSITION_DURATION, easing = M3EmphasizedEasing)
+    ) + scaleOut(
+        targetScale = 0.92f, // Escala hacia abajo para dar efecto de profundidad sin desaparecer por completo
+        animationSpec = tween(durationMillis = AOSP_TRANSITION_DURATION, easing = M3EmphasizedEasing)
+    )
+}
 
 // MD3 Expressive – Emphasized easing (matches Material Motion spec)
 // cubic-bezier(0.2, 0, 0, 1.0) — fast start, smooth settle
