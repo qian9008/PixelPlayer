@@ -20,3 +20,8 @@
 
 3. **`CastStateHolder` (修改)**
    - **核心改动**: 在 `init` 阶段，主动将 `DlnaMediaRouteProvider` 挂载到全局的 `MediaRouter.getInstance(context)` 中。这是实现 DLNA 架构与现有 Cast UI 无缝整合的枢纽点。
+
+## 相关参考文档
+
+*   [Selene-Source DLNA 实现分析](file:///d:/Users/Documents/1/pixelplayer/docs/selene_dlna_analysis.md) (2026-06-12)
+    - 记录了 Flutter 端使用 `dlna_dart` 实现 DLNA 投屏的架构与底层协议逻辑，可作为原生 DLNA 开发的对比参考。

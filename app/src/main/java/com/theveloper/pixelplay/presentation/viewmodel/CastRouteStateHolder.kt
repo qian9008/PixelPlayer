@@ -65,16 +65,14 @@ class CastRouteStateHolder @Inject constructor(
             castTransferStateHolder.primeHttpServerStart()
         }
 
-        castStateHolder.selectRoute(route)
-        
         // DLNA routes connect instantly locally because there is no Google Play Services handshake
         if (isDlnaRoute) {
-            castStateHolder.setCastConnecting(false)
-            castStateHolder.setRemotePlaybackActive(true)
-            
-            // Notify DLNA transfer state to start playing the current queue
-            // We will implement this next
+            castStateHolder.selectRoute(route)
+            castTransferStateHolder.startDlnaPlayback(route)
+            return
         }
+        
+        castStateHolder.selectRoute(route)
     }
 
     fun disconnect(resetConnecting: Boolean = true) {

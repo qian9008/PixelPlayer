@@ -523,6 +523,50 @@ class CastTransferStateHolder @Inject constructor(
         }
     }
     
+    fun startDlnaPlayback(route: MediaRouter.RouteInfo) {
+        scope?.launch {
+            castStateHolder.setCastConnecting(false)
+            castStateHolder.setRemotePlaybackActive(true)
+
+            if (!ensureHttpServerRunning(null)) {
+                Timber.e("DLNA: Failed to start HTTP server.")
+                return@launch
+            }
+
+            val serverAddress = MediaFileHttpServerService.serverAddress
+            if (serverAddress == null) {
+                emitCastError("DLNA setup is incomplete.")
+                return@launch
+            }
+
+            val currentQueue = getCurrentQueue?.invoke() ?: emptyList()
+            val localPlayer = dualPlayerEngine.masterPlayer
+            val wasPlaying = localPlayer.isPlaying || localPlayer.playWhenReady
+            val safeStartIndex = localPlayer.currentMediaItemIndex.takeIf { it in currentQueue.indices } ?: 0
+
+            val currentSong = currentQueue.getOrNull(safeStartIndex)
+            if (currentSong != null) {
+                // Pause local playback
+                localPlayer.pause()
+                
+                val accessPolicy = MediaFileHttpServerService.configureCastSessionAccess(
+                    allowedSongIds = currentQueue.map(Song::id),
+                    castDeviceIpHint = null
+                )
+
+                // Generate URL with token
+                val url = "$serverAddress/media/${currentSong.id}?token=${accessPolicy.authToken}"
+                
+                com.theveloper.pixelplay.dlna.DlnaManager.castMedia(route.id, route.name, url, currentSong.title)
+                
+                if (wasPlaying) {
+                    playbackStateHolder.updateStablePlayerState { it.copy(isPlaying = true) }
+                }
+                onSheetVisible?.invoke()
+            }
+        }
+    }
+
     private fun transferPlayback(session: CastSession) {
         scope?.launch {
             resetRemoteBufferingWatchdog()

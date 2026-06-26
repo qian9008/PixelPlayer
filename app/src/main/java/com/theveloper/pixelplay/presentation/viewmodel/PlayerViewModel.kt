@@ -4203,6 +4203,27 @@ class PlayerViewModel @Inject constructor(
     }
 
     fun playPause() {
+        val activeRoute = castStateHolder.selectedRoute.value
+        val isGoogleCastRoute = activeRoute?.supportsControlCategory(
+            com.google.android.gms.cast.CastMediaControlIntent.categoryForCast(
+                com.google.android.gms.cast.CastMediaControlIntent.DEFAULT_MEDIA_RECEIVER_APPLICATION_ID
+            )
+        ) == true
+        val isDlnaRoute = castStateHolder.isRemotePlaybackActive.value &&
+                activeRoute?.supportsControlCategory(androidx.mediarouter.media.MediaControlIntent.CATEGORY_REMOTE_PLAYBACK) == true &&
+                !isGoogleCastRoute
+
+        if (isDlnaRoute) {
+            val isPlaying = playbackStateHolder.stablePlayerState.value.isPlaying
+            if (isPlaying) {
+                com.theveloper.pixelplay.dlna.DlnaManager.pause()
+            } else {
+                com.theveloper.pixelplay.dlna.DlnaManager.play()
+            }
+            playbackStateHolder.updateStablePlayerState { it.copy(isPlaying = !isPlaying) }
+            return
+        }
+
         val castSession = castStateHolder.castSession.value
         if (castSession != null && castSession.remoteMediaClient != null) {
             val remoteMediaClient = castSession.remoteMediaClient!!
