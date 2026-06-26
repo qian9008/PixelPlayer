@@ -49,3 +49,6 @@ markdown.xml
 **/.env
 **/.env.*
 !**/.env.example
+
+/scratch/
+
